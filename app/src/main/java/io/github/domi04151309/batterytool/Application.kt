@@ -20,10 +20,6 @@ class Application : android.app.Application() {
         val systemApps = blacklist.filter { isSystemApp(it) }.toSet()
         if (systemApps.isEmpty()) return
         P.setBlacklist(this, blacklist - systemApps)
-        val autostartAllowed = P.getAutostartAllowed(this)
-        if (autostartAllowed.isNotEmpty()) {
-            P.setAutostartAllowed(this, autostartAllowed - systemApps)
-        }
         Log.i(Global.LOG_TAG, "Removed ${systemApps.size} system apps from the blacklist")
     }
 

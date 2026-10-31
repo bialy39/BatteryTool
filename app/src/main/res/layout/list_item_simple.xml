@@ -40,12 +40,4 @@
                     android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                     android:textIsSelectable="false" />
         </LinearLayout>
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/autostart_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="@dimen/full_padding"
-            android:contentDescription="@string/autostart"
-            android:visibility="gone" />
 </LinearLayout>

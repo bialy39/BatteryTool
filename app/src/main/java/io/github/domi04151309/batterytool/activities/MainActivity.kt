@@ -103,26 +103,6 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
         ContextCompat.startForegroundService(this, Intent(this, ForegroundService::class.java))
     }
 
-    override fun onAutostartToggled(
-        position: Int,
-        allowed: Boolean,
-    ) {
-        val packageName = listItems[position].summary
-        val allowedApps = P.getAutostartAllowedMutable(this)
-        if (allowed) {
-            allowedApps.add(packageName)
-        } else {
-            allowedApps.remove(packageName)
-        }
-        P.setAutostartAllowed(this, allowedApps)
-        listItems[position].autostartAllowed = allowed
-        Toast.makeText(
-            this,
-            if (allowed) R.string.toast_autostart_enabled else R.string.toast_autostart_disabled,
-            Toast.LENGTH_SHORT,
-        ).show()
-    }
-
     private fun loadApps() =
         Thread {
             val blacklist = P.getBlacklist(this)

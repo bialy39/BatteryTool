@@ -7,10 +7,8 @@ import androidx.preference.PreferenceManager
 object P {
     private const val APP_SET: String = "app_set"
     private const val FORCED_SET: String = "forced_set"
-    private const val AUTOSTART_SET: String = "autostart_allowed"
     private val APP_SET_DEFAULT: Set<String> = HashSet()
     private val FORCED_SET_DEFAULT: Set<String> = HashSet()
-    private val AUTOSTART_SET_DEFAULT: Set<String> = HashSet()
     internal const val SETUP_COMPLETE: String = "setup_complete"
     internal const val AUTO_STOP: String = "auto_stop"
     internal const val AUTO_STOP_DELAY: String = "auto_stop_delay"
@@ -60,25 +58,6 @@ object P {
         getPreferences(context)
             .edit()
             .putStringSet(FORCED_SET, forced)
-            .apply()
-    }
-
-    internal fun getAutostartAllowed(context: Context): Set<String> =
-        getPreferences(context).getStringSet(
-            AUTOSTART_SET,
-            AUTOSTART_SET_DEFAULT,
-        ) ?: AUTOSTART_SET_DEFAULT
-
-    internal fun getAutostartAllowedMutable(context: Context): MutableSet<String> =
-        HashSet(getAutostartAllowed(context))
-
-    internal fun setAutostartAllowed(
-        context: Context,
-        allowed: Set<String>,
-    ) {
-        getPreferences(context)
-            .edit()
-            .putStringSet(AUTOSTART_SET, allowed)
             .apply()
     }
 }

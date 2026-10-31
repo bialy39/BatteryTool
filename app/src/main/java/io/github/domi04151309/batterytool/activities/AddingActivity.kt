@@ -93,9 +93,4 @@ class AddingActivity : BaseActivity(), RecyclerViewHelperInterface {
 
         addingList.text = appsToAdd.joinToString { it.title }
     }
-
-    override fun onAutostartToggled(
-        position: Int,
-        allowed: Boolean,
-    ) = Unit
 }

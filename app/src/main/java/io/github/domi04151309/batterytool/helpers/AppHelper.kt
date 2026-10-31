@@ -28,8 +28,6 @@ object AppHelper {
                     },
             summary = packageName,
             icon = context.packageManager.getApplicationIcon(packageName),
-            isApp = true,
-            autostartAllowed = P.getAutostartAllowed(context).contains(packageName),
         )
 
     fun generateListItem(

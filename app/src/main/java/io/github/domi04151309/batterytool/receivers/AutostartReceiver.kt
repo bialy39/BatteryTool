@@ -10,8 +10,9 @@ import io.github.domi04151309.batterytool.helpers.P
 import io.github.domi04151309.batterytool.helpers.Root
 
 /**
- * Enforces per app autostart: every blacklisted app without autostart permission gets
- * force stopped on boot, after the user unlocks the device and when packages are installed.
+ * Enforces autostart blocking: every blacklisted app gets force stopped on boot, after the
+ * user unlocks the device and when packages are installed. There is no per app permission,
+ * autostart is always blocked for every added app.
  */
 class AutostartReceiver : BroadcastReceiver() {
     override fun onReceive(
@@ -39,7 +40,7 @@ class AutostartReceiver : BroadcastReceiver() {
     private fun forceStopBlockedApps(context: Context) {
         // Preferences live in credential encrypted storage: before the first unlock the
         // list is not available and the next boot or unlock broadcast enforces it again.
-        val blocked = P.getBlacklist(context) - P.getAutostartAllowed(context)
+        val blocked = P.getBlacklist(context)
         if (blocked.isEmpty()) return
         for (attempt in 1..MAX_ATTEMPTS) {
             if (Root.isAvailable()) {
@@ -48,7 +49,7 @@ class AutostartReceiver : BroadcastReceiver() {
             }
             if (attempt < MAX_ATTEMPTS) Thread.sleep(RETRY_DELAY_MILLIS)
         }
-        Log.w(Global.LOG_TAG, "Root is not available, autostart could not be enforced")
+        Log.w(Global.LOG_TAG, "Root is not available, blocked apps could not be force stopped")
     }
 
     companion object {

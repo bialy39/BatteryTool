@@ -6,6 +6,4 @@ class SimpleListItem(
     val title: String = "",
     val summary: String = "",
     var icon: Drawable? = null,
-    val isApp: Boolean = false,
-    var autostartAllowed: Boolean = false,
 )

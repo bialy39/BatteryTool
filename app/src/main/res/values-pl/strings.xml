@@ -44,13 +44,6 @@
     <string name="adding">Dodaj aplikacje</string>
     <string name="adding_user">Aplikacje użytkownika</string>
 
-    <string name="autostart">Autostart</string>
-    <string name="autostart_summary">Pozwól tej aplikacji startować przy włączeniu systemu i przetrwać zdarzenia systemowe</string>
-    <string name="autostart_on">Autostart włączony</string>
-    <string name="autostart_off">Autostart wyłączony</string>
-    <string name="toast_autostart_enabled">Autostart włączony</string>
-    <string name="toast_autostart_disabled">Autostart wyłączony</string>
-
     <string name="pref">Ustawienia</string>
     <string name="pref_auto_stop">Automatyczne zatrzymywanie</string>
     <string name="pref_auto_stop_summary">Automatycznie zatrzymuj aplikacje po wyłączeniu ekranu</string>
