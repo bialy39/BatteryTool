@@ -1,13 +1,13 @@
 package io.github.domi04151309.batterytool.services
 
-import android.annotation.TargetApi
 import android.os.Build
 import android.service.quicksettings.TileService
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import io.github.domi04151309.batterytool.R
 import io.github.domi04151309.batterytool.helpers.AppHelper
 
-@TargetApi(Build.VERSION_CODES.N)
+@RequiresApi(Build.VERSION_CODES.N)
 class QuickTileService : TileService() {
     override fun onClick() {
         AppHelper.hibernate(this)

@@ -1,22 +1,21 @@
-import com.android.build.gradle.internal.tasks.factory.dependsOn
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-private val readAndUnderstoodLicense = false
+private val readAndUnderstoodLicense = true
 
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("io.gitlab.arturbosch.detekt")
 }
 
 android {
     namespace = "io.github.domi04151309.batterytool"
-    compileSdk = 34
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "io.github.domi04151309.batterytool"
         minSdk = 23
         //noinspection EditedTargetSdkVersion
-        targetSdk = 34
+        targetSdk = 37
         versionCode = 120
         versionName = "1.2.0"
     }
@@ -46,9 +45,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     detekt {
         config.setFrom(file("detekt-config.yml"))
         buildUponDefaultConfig = true
@@ -57,7 +53,13 @@ android {
     lint {
         disable += "MissingTranslation"
     }
-    project.tasks.preBuild.dependsOn("license")
+    project.tasks.named("preBuild") { dependsOn("license") }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+    }
 }
 
 tasks.register("license") {
@@ -86,8 +88,11 @@ tasks.register("license") {
 }
 
 dependencies {
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.appcompat:appcompat:1.8.0")
+    implementation("androidx.core:core-ktx:1.19.1")
+    implementation("androidx.activity:activity-ktx:1.13.0")
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
+    implementation("com.google.android.material:material:1.14.0")
     implementation("androidx.preference:preference-ktx:1.2.1")
-    implementation("androidx.media2:media2-session:1.2.1")
+    implementation("androidx.media2:media2-session:1.3.0")
 }

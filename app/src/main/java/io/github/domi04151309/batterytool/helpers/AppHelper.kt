@@ -14,19 +14,22 @@ object AppHelper {
         packageName: String,
     ): SimpleListItem =
         SimpleListItem(
-            context.packageManager.getApplicationLabel(
-                context.packageManager.getApplicationInfo(
-                    packageName,
-                    PackageManager.GET_META_DATA,
-                ),
-            ).toString() +
-                if (P.getForced(context).contains(packageName)) {
-                    " " + context.resources.getString(R.string.main_forced)
-                } else {
-                    ""
-                },
-            packageName,
-            context.packageManager.getApplicationIcon(packageName),
+            title =
+                context.packageManager.getApplicationLabel(
+                    context.packageManager.getApplicationInfo(
+                        packageName,
+                        PackageManager.GET_META_DATA,
+                    ),
+                ).toString() +
+                    if (P.getForced(context).contains(packageName)) {
+                        " " + context.resources.getString(R.string.main_forced)
+                    } else {
+                        ""
+                    },
+            summary = packageName,
+            icon = context.packageManager.getApplicationIcon(packageName),
+            isApp = true,
+            autostartAllowed = P.getAutostartAllowed(context).contains(packageName),
         )
 
     fun generateListItem(

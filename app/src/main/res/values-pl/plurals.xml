@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="pref_auto_stop_delay_summary">
+        <item quantity="one">Odczekaj %d sekundę przed zatrzymaniem</item>
+        <item quantity="few">Odczekaj %d sekundy przed zatrzymaniem</item>
+        <item quantity="many">Odczekaj %d sekund przed zatrzymaniem</item>
+        <item quantity="other">Odczekaj %d sekundy przed zatrzymaniem</item>
+    </plurals>
+</resources>

@@ -34,15 +34,11 @@
 
     <string name="adding">Aggiungi applicazioni</string>
     <string name="adding_user">Applicazioni utente</string>
-    <string name="adding_system">Applicazioni di sistema</string>
 
     <string name="pref">Impostazioni</string>
     <string name="pref_auto_stop">Chiudi automaticamente</string>
     <string name="pref_auto_stop_summary">Chiudi automaticamente le app dopo lo spegnimento dello schermo</string>
     <string name="pref_auto_stop_delay">Ritardo chiusura automatica</string>
-    <string name="pref_aggressive_doze">Aggressive doze</string>
-    <string name="pref_aggressive_doze_summary">Entra in modalità doze dopo lo spegnimento dello schermo</string>
-    <string name="pref_aggressive_doze_delay">Ritardo aggressive doze</string>
 
     <string name="pref_int_failed">Questo valore non può essere utilizzato</string>
 

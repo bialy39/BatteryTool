@@ -10,6 +10,7 @@ class LibraryActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        applyEdgeToEdgeInsets(findViewById(R.id.settings))
         supportFragmentManager
             .beginTransaction()
             .replace(R.id.settings, GeneralPreferenceFragment())

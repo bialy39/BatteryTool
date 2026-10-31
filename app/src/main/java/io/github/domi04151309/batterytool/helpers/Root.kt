@@ -8,6 +8,9 @@ import kotlin.collections.HashSet
 import kotlin.text.StringBuilder
 
 internal object Root {
+    private const val AVAILABILITY_TIMEOUT_MILLIS: Long = 3_000L
+    private const val AVAILABILITY_POLL_MILLIS: Long = 100L
+
     fun request(): Boolean =
         try {
             val process = Runtime.getRuntime().exec("su")
@@ -27,6 +30,31 @@ internal object Root {
         } catch (exception: IOException) {
             Log.w(this::class.simpleName, exception)
         }
+    }
+
+    fun isAvailable(): Boolean {
+        var available = false
+        var process: Process? = null
+        try {
+            process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
+            var waited = 0L
+            while (!available && waited < AVAILABILITY_TIMEOUT_MILLIS) {
+                try {
+                    available = process.exitValue() == 0
+                } catch (ignoredException: IllegalThreadStateException) {
+                    Thread.sleep(AVAILABILITY_POLL_MILLIS)
+                    waited += AVAILABILITY_POLL_MILLIS
+                }
+            }
+        } catch (exception: IOException) {
+            Log.w(this::class.simpleName, exception)
+        } catch (exception: InterruptedException) {
+            Log.w(this::class.simpleName, exception)
+            Thread.currentThread().interrupt()
+        } finally {
+            process?.destroy()
+        }
+        return available
     }
 
     fun shell(commands: Array<String>) {

@@ -1,0 +1,80 @@
+<resources>
+    <string name="app_name">Battery Tool</string>
+    <string name="app_description">Automatycznie zatrzymuj aplikacje działające w tle</string>
+    <string name="shortcut">Zatrzymaj teraz</string>
+
+    <string name="service_text">Battery Tool działa w tle</string>
+    <string name="service_channel">Kanał usługi</string>
+
+    <string name="setup_title">Automatycznie zatrzymuj aplikacje działające w tle.</string>
+    <string name="setup_summary">Aby to robić, aplikacja potrzebuje uprawnień root. Przyznaj je po kliknięciu Kontynuuj.</string>
+    <string name="setup_button">Kontynuuj</string>
+    <string name="setup_demo">Demo</string>
+    <string name="setup_demo_summary">Tryb demo pozwala obejrzeć aplikację bez żadnej funkcjonalności. Włącz dostęp root, aby aplikacja działała.</string>
+
+    <string name="action_failed">Akcja nie powiodła się</string>
+    <string name="action_failed_summary">Ta aplikacja wymaga dostępu root. Włącz dostęp root.</string>
+
+    <string name="str_security">Bezpieczeństwo</string>
+
+    <string name="main_stopped_soon">Wkrótce zostaną zatrzymane</string>
+    <string name="main_stopped_unnecessary">Nie trzeba zatrzymywać</string>
+    <string name="main_stopped">Zatrzymane</string>
+    <string name="main_empty">Nic tu nie ma</string>
+    <string name="main_empty_summary">Wygląda na to, że żadna aplikacja nie należy do tej kategorii</string>
+    <string name="main_forced">(wymuszone)</string>
+
+    <string name="pref_allow_music_apps">Ignoruj aplikację muzyczną</string>
+    <string name="pref_allow_music_apps_summary">Nie zatrzymuj aplikacji odtwarzającej muzykę</string>
+    <string name="notifications_permission">Uprawnienie do powiadomień</string>
+    <string name="notifications_permission_explanation">Aby wykryć aplikacje odtwarzające muzykę, ta aplikacja musi czytać wyświetlane powiadomienia i dlatego potrzebuje tego uprawnienia</string>
+
+    <string name="main_click_dialog_title">Wybierz akcję</string>
+    <string name="main_click_dialog_turn_on_always">Zawsze zatrzymuj tę aplikację</string>
+    <string name="main_click_dialog_turn_off_always">Nie zatrzymuj tej aplikacji zawsze</string>
+    <string-array name="main_click_dialog_options">
+        <item>Zatrzymaj teraz</item>
+        <item>Otwórz ustawienia aplikacji</item>
+        <item>Usuń z listy</item>
+    </string-array>
+
+    <string name="toast_stopped">Zatrzymano wybraną aplikację</string>
+    <string name="toast_stopped_all">Zatrzymano wybrane aplikacje</string>
+
+    <string name="adding">Dodaj aplikacje</string>
+    <string name="adding_user">Aplikacje użytkownika</string>
+
+    <string name="autostart">Autostart</string>
+    <string name="autostart_summary">Pozwól tej aplikacji startować przy włączeniu systemu i przetrwać zdarzenia systemowe</string>
+    <string name="autostart_on">Autostart włączony</string>
+    <string name="autostart_off">Autostart wyłączony</string>
+    <string name="toast_autostart_enabled">Autostart włączony</string>
+    <string name="toast_autostart_disabled">Autostart wyłączony</string>
+
+    <string name="pref">Ustawienia</string>
+    <string name="pref_auto_stop">Automatyczne zatrzymywanie</string>
+    <string name="pref_auto_stop_summary">Automatycznie zatrzymuj aplikacje po wyłączeniu ekranu</string>
+    <string name="pref_auto_stop_delay">Opóźnienie automatycznego zatrzymania</string>
+    <string name="pref_ignore_focused_app">Ignoruj aktywne aplikacje</string>
+    <string name="pref_ignore_focused_app_summary">Nie zatrzymuj aktualnie aktywnych aplikacji</string>
+
+    <string name="pref_int_failed">Tej wartości nie można użyć</string>
+
+    <string name="loading">Ładowanie</string>
+
+    <string name="about">O aplikacji</string>
+    <string name="about_summary">Informacje o aplikacji</string>
+    <string name="about_app_version">Wersja aplikacji</string>
+    <string name="about_privacy">Zewnętrzne treści</string>
+    <string name="about_privacy_desc">Zewnętrzne treści będą wczytywane z GitHuba. Przeczytaj ich politykę prywatności, aby uzyskać więcej informacji.</string>
+    <string name="about_privacy_policy">Polityka prywatności</string>
+    <string name="about_contributors">Współtwórcy</string>
+    <string name="about_contributors_desc">Lista współtwórców</string>
+    <string name="about_general">Ogólne</string>
+    <string name="about_github">Repozytorium GitHub</string>
+    <string name="about_license">Licencja</string>
+    <string name="about_icons">Ikony</string>
+    <string name="about_icons_desc">Ikony autorstwa Icons8 i Google</string>
+    <string name="about_libraries">Biblioteki</string>
+    <string name="about_libraries_desc">Lista używanych bibliotek</string>
+</resources>

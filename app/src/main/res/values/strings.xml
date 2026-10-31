@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Battery Tool</string>
     <string name="app_description">Automatically stop apps running in the background</string>
     <string name="shortcut">Stop now</string>
@@ -43,16 +43,18 @@
 
     <string name="adding">Add applications</string>
     <string name="adding_user">User Applications</string>
-    <string name="adding_system">System Applications</string>
-    <string name="adding_internal">Internal System Applications</string>
+
+    <string name="autostart">Autostart</string>
+    <string name="autostart_summary" tools:ignore="UnusedResources">Let this app start on boot and survive system events</string>
+    <string name="autostart_on">Autostart on</string>
+    <string name="autostart_off">Autostart off</string>
+    <string name="toast_autostart_enabled">Autostart enabled</string>
+    <string name="toast_autostart_disabled">Autostart disabled</string>
 
     <string name="pref">Settings</string>
     <string name="pref_auto_stop">Automatically stop</string>
     <string name="pref_auto_stop_summary">Automatically stop apps after the screen turns off</string>
     <string name="pref_auto_stop_delay">Auto stop delay</string>
-    <string name="pref_aggressive_doze">Aggressive doze</string>
-    <string name="pref_aggressive_doze_summary">Enter doze mode after the screen turns off</string>
-    <string name="pref_aggressive_doze_delay">Aggressive doze delay</string>
     <string name="pref_ignore_focused_app">Ignore focused apps</string>
     <string name="pref_ignore_focused_app_summary">Don\’t stop currently focused apps</string>
 

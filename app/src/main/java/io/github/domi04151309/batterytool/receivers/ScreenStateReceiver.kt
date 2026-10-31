@@ -7,11 +7,9 @@ import android.os.Handler
 import android.os.Looper
 import io.github.domi04151309.batterytool.helpers.AppHelper
 import io.github.domi04151309.batterytool.helpers.P
-import io.github.domi04151309.batterytool.helpers.Root
 
 class ScreenStateReceiver : BroadcastReceiver() {
     private var isScreenOn = true
-    private var isInDozeMode = false
 
     private fun onScreenOff(context: Context) {
         isScreenOn = false
@@ -22,29 +20,10 @@ class ScreenStateReceiver : BroadcastReceiver() {
                     .toLong() * SECONDS_TO_MILLIS,
             )
         }
-        if (P.getPreferences(context).getBoolean(P.AGGRESSIVE_DOZE, P.AGGRESSIVE_DOZE_DEFAULT)) {
-            Handler(Looper.getMainLooper()).postDelayed(
-                {
-                    if (!isScreenOn) {
-                        isInDozeMode = true
-                        Root.shell("dumpsys deviceidle force-idle")
-                    }
-                },
-                P.getPreferences(context).getInt(
-                    P.AGGRESSIVE_DOZE_DELAY,
-                    P.AGGRESSIVE_DOZE_DELAY_DEFAULT,
-                )
-                    .toLong() * SECONDS_TO_MILLIS,
-            )
-        }
     }
 
     private fun onScreenOn() {
         isScreenOn = true
-        if (isInDozeMode) {
-            Root.shell("dumpsys deviceidle unforce")
-            isInDozeMode = false
-        }
     }
 
     override fun onReceive(

@@ -28,6 +28,7 @@ class AddingActivity : BaseActivity(), RecyclerViewHelperInterface {
         setContentView(R.layout.activity_adding)
 
         addingList = findViewById(R.id.adding_list)
+        applyEdgeToEdgeInsets(findViewById(R.id.root))
         recyclerView = findViewById(R.id.list)
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = LoadingAdapter()
@@ -45,37 +46,22 @@ class AddingActivity : BaseActivity(), RecyclerViewHelperInterface {
             applicationInfo.packageName != packageName &&
             !P.getBlacklist(this).contains(applicationInfo.packageName)
 
-    @Suppress("CognitiveComplexMethod")
     private fun loadApps() =
         Thread {
             val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
             val userApps: MutableList<SimpleListItem> = ArrayList(installedApps.size)
-            val systemApps: MutableList<SimpleListItem> = ArrayList(installedApps.size)
-            val internalApps: MutableList<SimpleListItem> = ArrayList(installedApps.size)
 
             @Suppress("LoopWithTooManyJumpStatements")
             for (app in installedApps) {
-                if (isNewValidApp(app)) {
-                    val listItem = AppHelper.generateListItem(this, app)
-                    if (listItem.title == listItem.summary) continue
-                    if (app.flags and ApplicationInfo.FLAG_SYSTEM == 0) {
-                        userApps.add(listItem)
-                        continue
-                    }
-                    if (packageManager.getLaunchIntentForPackage(app.packageName) != null) {
-                        systemApps.add(listItem)
-                        continue
-                    }
-                    internalApps.add(listItem)
-                }
+                if (!isNewValidApp(app)) continue
+                if (app.flags and ApplicationInfo.FLAG_SYSTEM != 0) continue
+                val listItem = AppHelper.generateListItem(this, app)
+                if (listItem.title == listItem.summary) continue
+                userApps.add(listItem)
             }
 
             listItems.add(SimpleListItem(summary = resources.getString(R.string.adding_user)))
             listItems.addAll(userApps)
-            listItems.add(SimpleListItem(summary = resources.getString(R.string.adding_system)))
-            listItems.addAll(systemApps)
-            listItems.add(SimpleListItem(summary = resources.getString(R.string.adding_internal)))
-            listItems.addAll(internalApps)
 
             Looper.prepare()
             runOnUiThread {
@@ -107,4 +93,9 @@ class AddingActivity : BaseActivity(), RecyclerViewHelperInterface {
 
         addingList.text = appsToAdd.joinToString { it.title }
     }
+
+    override fun onAutostartToggled(
+        position: Int,
+        allowed: Boolean,
+    ) = Unit
 }

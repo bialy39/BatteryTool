@@ -1,21 +1,23 @@
 package io.github.domi04151309.batterytool.activities
 
+import android.Manifest
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.elevation.SurfaceColors
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import io.github.domi04151309.batterytool.R
 import io.github.domi04151309.batterytool.adapters.LoadingAdapter
@@ -30,6 +32,8 @@ import io.github.domi04151309.batterytool.services.ForegroundService
 class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
     private val listItems: MutableList<SimpleListItem> = arrayListOf()
     private lateinit var recyclerView: RecyclerView
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { startBatteryService() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,9 +51,9 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
             return
         }
 
-        ContextCompat.startForegroundService(this, Intent(this, ForegroundService::class.java))
+        applyEdgeToEdgeInsets(findViewById(R.id.root))
 
-        window.statusBarColor = SurfaceColors.SURFACE_0.getColor(this)
+        startServiceWithPermission()
 
         recyclerView = findViewById(R.id.list)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -79,6 +83,44 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
     override fun onStart() {
         super.onStart()
         loadApps()
+    }
+
+    private fun startServiceWithPermission() {
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            startBatteryService()
+        }
+    }
+
+    private fun startBatteryService() {
+        ContextCompat.startForegroundService(this, Intent(this, ForegroundService::class.java))
+    }
+
+    override fun onAutostartToggled(
+        position: Int,
+        allowed: Boolean,
+    ) {
+        val packageName = listItems[position].summary
+        val allowedApps = P.getAutostartAllowedMutable(this)
+        if (allowed) {
+            allowedApps.add(packageName)
+        } else {
+            allowedApps.remove(packageName)
+        }
+        P.setAutostartAllowed(this, allowedApps)
+        listItems[position].autostartAllowed = allowed
+        Toast.makeText(
+            this,
+            if (allowed) R.string.toast_autostart_enabled else R.string.toast_autostart_disabled,
+            Toast.LENGTH_SHORT,
+        ).show()
     }
 
     private fun loadApps() =

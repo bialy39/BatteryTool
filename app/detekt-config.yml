@@ -339,7 +339,7 @@ naming:
     excludeClassPattern: '$^'
   InvalidPackageDeclaration:
     active: true
-    rootPackage: ''
+    rootPackage: 'io.github.domi04151309.batterytool'
     requireRootInDeclaration: true
   LambdaParameterNaming:
     active: true

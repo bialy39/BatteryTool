@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.elevation.SurfaceColors
 import io.github.domi04151309.batterytool.R
 import io.github.domi04151309.batterytool.helpers.P
 import io.github.domi04151309.batterytool.helpers.Root
@@ -14,7 +13,7 @@ class SetupActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_setup)
 
-        window.statusBarColor = SurfaceColors.SURFACE_0.getColor(this)
+        applyEdgeToEdgeInsets(findViewById(R.id.root))
 
         findViewById<Button>(R.id.button).setOnClickListener {
             if (Root.request()) {

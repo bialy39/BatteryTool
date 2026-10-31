@@ -10,7 +10,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreference
+import androidx.preference.SwitchPreferenceCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.github.domi04151309.batterytool.R
 import io.github.domi04151309.batterytool.custom.EditIntegerPreference
@@ -22,6 +22,7 @@ class SettingsActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        applyEdgeToEdgeInsets(findViewById(R.id.settings))
         supportFragmentManager
             .beginTransaction()
             .replace(R.id.settings, PreferenceFragment())
@@ -33,7 +34,6 @@ class SettingsActivity : BaseActivity() {
         private val preferenceChangeListener =
             SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
                 if (key == P.AUTO_STOP_DELAY) updateAutoStopDelaySummary()
-                if (key == P.AGGRESSIVE_DOZE_DELAY) updateDozeDelaySummary()
                 if (key == P.ALLOW_MUSIC) updateAllowMusicApps()
             }
 
@@ -48,7 +48,7 @@ class SettingsActivity : BaseActivity() {
                 preferenceManager.sharedPreferences?.edit()
                     ?.putBoolean(P.ALLOW_MUSIC, P.ALLOW_MUSIC_DEFAULT)
                     ?.apply()
-                preferenceScreen.findPreference<SwitchPreference>(
+                preferenceScreen.findPreference<SwitchPreferenceCompat>(
                     P.ALLOW_MUSIC,
                 )?.isChecked = P.ALLOW_MUSIC_DEFAULT
             }
@@ -79,7 +79,6 @@ class SettingsActivity : BaseActivity() {
         ) {
             addPreferencesFromResource(R.xml.pref_general)
             updateAutoStopDelaySummary()
-            updateDozeDelaySummary()
             findPreference<Preference>("about")?.setOnPreferenceClickListener {
                 startActivity(Intent(context, AboutActivity::class.java))
                 true
@@ -97,21 +96,6 @@ class SettingsActivity : BaseActivity() {
                     preferenceManager.sharedPreferences?.getInt(
                         P.AUTO_STOP_DELAY,
                         P.AUTO_STOP_DELAY_DEFAULT,
-                    ),
-                )
-        }
-
-        private fun updateDozeDelaySummary() {
-            findPreference<EditIntegerPreference>(P.AGGRESSIVE_DOZE_DELAY)?.summary =
-                requireContext().resources.getQuantityString(
-                    R.plurals.pref_aggressive_doze_delay_summary,
-                    preferenceManager.sharedPreferences?.getInt(
-                        P.AGGRESSIVE_DOZE_DELAY,
-                        P.AGGRESSIVE_DOZE_DELAY_DEFAULT,
-                    ) ?: P.AGGRESSIVE_DOZE_DELAY_DEFAULT,
-                    preferenceManager.sharedPreferences?.getInt(
-                        P.AGGRESSIVE_DOZE_DELAY,
-                        P.AGGRESSIVE_DOZE_DELAY_DEFAULT,
                     ),
                 )
         }

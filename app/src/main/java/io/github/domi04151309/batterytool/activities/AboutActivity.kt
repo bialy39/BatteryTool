@@ -1,8 +1,8 @@
 package io.github.domi04151309.batterytool.activities
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
+import androidx.core.net.toUri
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -13,6 +13,7 @@ class AboutActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
+        applyEdgeToEdgeInsets(findViewById(R.id.settings))
         supportFragmentManager
             .beginTransaction()
             .replace(R.id.settings, GeneralPreferenceFragment())
@@ -25,18 +26,13 @@ class AboutActivity : BaseActivity() {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.about_icons)
                 .setItems(resources.getStringArray(R.array.about_icons_array)) { _, which ->
-                    startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(
-                                when (which) {
-                                    0 -> "https://icons8.com/"
-                                    1 -> "https://fonts.google.com/icons?selected=Material+Icons"
-                                    else -> "about:blank"
-                                },
-                            ),
-                        ),
-                    )
+                    val url =
+                        when (which) {
+                            0 -> "https://icons8.com/"
+                            1 -> "https://fonts.google.com/icons?selected=Material+Icons"
+                            else -> "about:blank"
+                        }
+                    startActivity(Intent(Intent.ACTION_VIEW, url.toUri()))
                 }
                 .show()
             return true
@@ -51,7 +47,7 @@ class AboutActivity : BaseActivity() {
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
-                            Uri.parse(link),
+                            link.toUri(),
                         ),
                     )
                 }
@@ -60,9 +56,7 @@ class AboutActivity : BaseActivity() {
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
-                            Uri.parse(
-                                "https://docs.github.com/en/github/site-policy/github-privacy-statement",
-                            ),
+                            "https://docs.github.com/en/github/site-policy/github-privacy-statement".toUri(),
                         ),
                     )
                 }

@@ -1,6 +1,6 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <SwitchPreference
+    <androidx.preference.SwitchPreferenceCompat
         android:defaultValue="true"
         android:icon="@drawable/ic_auto_stop"
         android:key="auto_stop"
@@ -12,25 +12,13 @@
         android:key="auto_stop_delay"
         android:summary="@string/pref_auto_stop_delay"
         android:title="@string/pref_auto_stop_delay" />
-    <SwitchPreference
-        android:defaultValue="false"
-        android:icon="@drawable/ic_snooze"
-        android:key="aggressive_doze"
-        android:summary="@string/pref_aggressive_doze_summary"
-        android:title="@string/pref_aggressive_doze" />
-    <io.github.domi04151309.batterytool.custom.EditIntegerPreference
-        android:defaultValue="600"
-        android:icon="@drawable/ic_timer"
-        android:key="aggressive_doze_delay"
-        android:summary="@string/pref_aggressive_doze_delay"
-        android:title="@string/pref_aggressive_doze_delay" />
-    <SwitchPreference
+    <androidx.preference.SwitchPreferenceCompat
         android:defaultValue="false"
         android:icon="@drawable/ic_focus"
         android:key="ignore_focused_apps"
         android:summary="@string/pref_ignore_focused_app_summary"
         android:title="@string/pref_ignore_focused_app" />
-    <SwitchPreference
+    <androidx.preference.SwitchPreferenceCompat
         android:defaultValue="false"
         android:icon="@drawable/ic_music"
         android:key="allow_music"
