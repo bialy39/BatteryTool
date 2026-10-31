@@ -24,6 +24,14 @@
     <string name="main_empty_summary">It seems that no app falls into this category</string>
     <string name="main_forced">(forced)</string>
 
+    <string name="tab_blocked">Blocked apps</string>
+    <string name="tab_running">Running apps</string>
+    <string name="kill">Kill</string>
+    <string name="running_empty">Nothing is running in the background</string>
+    <string name="running_empty_summary">No user app currently has a background process</string>
+    <string name="toast_killed">App stopped</string>
+    <string name="running_foreground">foreground</string>
+
     <string name="pref_allow_music_apps">Ignore music app</string>
     <string name="pref_allow_music_apps_summary">Don\’t stop currently playing music app</string>
     <string name="notifications_permission">Notifications Permission</string>

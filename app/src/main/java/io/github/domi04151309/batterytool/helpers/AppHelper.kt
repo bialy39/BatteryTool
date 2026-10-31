@@ -46,6 +46,53 @@ object AppHelper {
             applicationInfo.loadIcon(context.packageManager),
         )
 
+    /**
+     * User apps that currently have a process but are not in the foreground, sorted by their label.
+     * Foreground apps are left out on purpose: they are not "running in the background", and
+     * force stopping the app the user is looking at would be surprising.
+     */
+    internal fun loadRunningApps(context: Context): List<SimpleListItem> {
+        val candidates =
+            context.packageManager
+                .getInstalledApplications(PackageManager.GET_META_DATA)
+                .filter { isUserApp(context, it) }
+                .map { it.packageName }
+                .toSet()
+        val running = if (candidates.isEmpty()) HashSet() else Root.getRunning(candidates)
+        val focused = if (running.isEmpty()) HashSet() else Root.getFocusedApps()
+        if (focused.isNotEmpty()) {
+            Log.d(
+                Global.LOG_TAG,
+                "running apps: skipping ${context.resources.getString(R.string.running_foreground)} " +
+                    focused.joinToString(),
+            )
+        }
+        return candidates
+            .filter { running.contains(it) && !focused.contains(it) }
+            .mapNotNull { packageName -> runningItem(context, packageName) }
+            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+    }
+
+    private fun isUserApp(
+        context: Context,
+        applicationInfo: ApplicationInfo,
+    ): Boolean =
+        applicationInfo.packageName != context.packageName &&
+            applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0 &&
+            applicationInfo.flags and ApplicationInfo.FLAG_INSTALLED != 0
+
+    private fun runningItem(
+        context: Context,
+        packageName: String,
+    ): SimpleListItem? =
+        try {
+            generateListItem(context, packageName)
+        } catch (exception: PackageManager.NameNotFoundException) {
+            // The app was uninstalled between the query and the lookup.
+            Log.w(Global.LOG_TAG, exception)
+            null
+        }
+
     private fun hibernateApps(
         context: Context,
         playingMusicPackage: String?,
