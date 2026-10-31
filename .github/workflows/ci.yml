@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - android17
   pull_request:
     branches:
       - main

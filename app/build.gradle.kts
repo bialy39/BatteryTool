@@ -2,6 +2,13 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 private val readAndUnderstoodLicense = true
 
+// Release signing is configured exclusively from environment variables so that no
+// keystore or password ever has to be committed. If no keystore is provided the
+// release build stays unsigned - there is deliberately no fallback to the debug key.
+private val releaseKeystorePath: String? = System.getenv("KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+private val releaseKeystore =
+    releaseKeystorePath?.let { file(it) }?.takeIf { it.isFile }
+
 plugins {
     id("com.android.application")
     id("io.gitlab.arturbosch.detekt")
@@ -12,12 +19,28 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "io.github.domi04151309.batterytool"
+        applicationId = "dev.bialy39.batterytool"
         minSdk = 23
         //noinspection EditedTargetSdkVersion
         targetSdk = 37
-        versionCode = 120
-        versionName = "1.2.0"
+        versionCode = 130
+        versionName = "1.3.0"
+    }
+
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        } else if (releaseKeystorePath != null) {
+            throw GradleException(
+                "KEYSTORE_FILE is set to '$releaseKeystorePath' but that file does not exist. " +
+                    "Unset KEYSTORE_FILE to build an unsigned release APK.",
+            )
+        }
     }
 
     buildTypes {
@@ -36,6 +59,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            signingConfig = signingConfigs.findByName("release")
         }
     }
     buildFeatures {

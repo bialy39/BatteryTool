@@ -123,11 +123,10 @@ object AppHelper {
             } else {
                 null
             }
-        enforceAutostartApps(context, reason, blocked, playingMusicPackage)
+        enforceAutostartApps(reason, blocked, playingMusicPackage)
     }
 
     private fun enforceAutostartApps(
-        context: Context,
         reason: String,
         blocked: Set<String>,
         playingMusicPackage: String?,

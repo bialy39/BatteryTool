@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then
+            echo "::error::Secret KEYSTORE_BASE64 is not set - cannot sign the release."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+          test -s "$RUNNER_TEMP/release.keystore"
+          echo "Keystore decoded: $(stat -c%s "$RUNNER_TEMP/release.keystore") bytes"
+
+      - name: Assemble release
+        env:
+          KEYSTORE_FILE: ${{ runner.temp }}/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+
+      - name: Verify APK signature
+        id: verify
+        run: |
+          set -euo pipefail
+          APKSIGNER="$(ls -d "${ANDROID_SDK_ROOT:-$ANDROID_HOME}"/build-tools/*/apksigner | sort -V | tail -n 1)"
+          APK="$(ls app/build/outputs/apk/release/*.apk | head -n 1)"
+          echo "Checking $APK with $APKSIGNER"
+          # Fails the job if the APK is unsigned or the signature does not verify.
+          "$APKSIGNER" verify --verbose --print-certs "$APK" | tee apksigner.txt
+          if grep -qi "CN=Android Debug" apksigner.txt; then
+            echo "::error::APK is signed with the debug key - refusing to publish."
+            exit 1
+          fi
+          grep -q "Verified using v2 scheme (APK Signature Scheme v2): true" apksigner.txt
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+          sha256sum "$APK" | tee "$APK.sha256"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.verify.outputs.apk }}
+            ${{ steps.verify.outputs.apk }}.sha256
+          generate_release_notes: true
+          fail_on_unmatched_files: true

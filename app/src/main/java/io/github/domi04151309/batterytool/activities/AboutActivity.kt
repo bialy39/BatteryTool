@@ -103,7 +103,7 @@ class AboutActivity : BaseActivity() {
     }
 
     companion object {
-        private const val REPOSITORY: String = "Domi04151309/BatteryTool"
+        private const val REPOSITORY: String = "bialy39/BatteryTool"
         private const val BRANCH: String = "main"
         private const val REPOSITORY_URL: String = "https://github.com/$REPOSITORY"
     }
