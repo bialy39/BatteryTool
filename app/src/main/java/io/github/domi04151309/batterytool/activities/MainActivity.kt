@@ -39,6 +39,10 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
     private lateinit var recyclerView: RecyclerView
     private lateinit var addButton: FloatingActionButton
     private var mode = MODE_BLOCKED
+
+    // Set while the saved tab is restored, so the listener does not reload the list of the tab
+    // that is being left. onStart does the single load for the restored tab.
+    private var restoringTab = false
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { startBatteryService() }
 
@@ -91,23 +95,36 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
         tabs.addOnTabSelectedListener(
             object : TabLayout.OnTabSelectedListener {
                 override fun onTabSelected(tab: TabLayout.Tab) {
-                    switchMode(if (tab.position == TAB_RUNNING) MODE_RUNNING else MODE_BLOCKED)
+                    switchMode(
+                        if (tab.position == TAB_RUNNING) MODE_RUNNING else MODE_BLOCKED,
+                        reload = !restoringTab,
+                    )
                 }
 
                 override fun onTabUnselected(tab: TabLayout.Tab) = Unit
 
                 override fun onTabReselected(tab: TabLayout.Tab) {
                     // Coming back to the tab that is already selected: refresh it anyway.
-                    loadApps()
+                    if (!restoringTab) loadApps()
                 }
             },
         )
-        // The TabLayout restores its selection after a configuration change, the mode has to
-        // follow it before onStart loads the list. onStart does the first load, so no reload here.
-        switchMode(
-            if (tabs.selectedTabPosition == TAB_RUNNING) MODE_RUNNING else MODE_BLOCKED,
-            reload = false,
-        )
+        // The TabLayout starts at position 0 while the activity state is recreated and it would
+        // otherwise send the user back to Blocked apps, so the mode saved in onSaveInstanceState
+        // wins. The listener stays quiet during the restore and onStart does the single load.
+        val savedMode = savedInstanceState?.getInt(STATE_MODE, MODE_BLOCKED) ?: MODE_BLOCKED
+        val restoredMode = if (tabs.getTabAt(savedMode) != null) savedMode else MODE_BLOCKED
+        if (tabs.selectedTabPosition != restoredMode) {
+            restoringTab = true
+            tabs.getTabAt(restoredMode)?.select()
+            restoringTab = false
+        }
+        switchMode(restoredMode, reload = false)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(STATE_MODE, mode)
     }
 
     override fun onStart() {
@@ -340,6 +357,7 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
         private const val MODE_BLOCKED = 0
         private const val MODE_RUNNING = 1
         private const val TAB_RUNNING = 1
+        private const val STATE_MODE = "mode"
         private const val ITEM_STOP_NOW = 0
         private const val ITEM_OPEN_SETTINGS = 1
         private const val ITEM_ALWAYS_STOP = 2
