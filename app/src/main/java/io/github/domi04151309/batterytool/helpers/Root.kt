@@ -174,8 +174,10 @@ internal object Root {
         return false
     }
 
-    private fun shellTimeoutSeconds(commandCount: Int): Long =
-        SHELL_TIMEOUT_SECONDS + commandCount * SHELL_TIMEOUT_PER_COMMAND_SECONDS
+    private fun shellTimeoutSeconds(commandCount: Int): Long {
+        val perCommandTimeout = commandCount * SHELL_TIMEOUT_PER_COMMAND_SECONDS
+        return SHELL_TIMEOUT_SECONDS + perCommandTimeout
+    }
 
     private fun execToString(script: String): String {
         var process: Process? = null

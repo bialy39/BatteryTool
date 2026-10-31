@@ -13,6 +13,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Forks inherit read-only default token permissions, which makes the SARIF
+# upload of ktlint/detekt fail even when the analysis itself passed.
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   ktlint:
     runs-on: ubuntu-latest
