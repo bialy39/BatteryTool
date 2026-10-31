@@ -101,8 +101,9 @@ object AppHelper {
 
     /**
      * One enforcement pass: force stops every app of the blacklist that is running right now.
-     * Apps that are in the foreground (when ignoring focused apps is enabled) and the app that
-     * is currently playing music (when allowing music is enabled) are left alone.
+     * Apps that are in the foreground and the app that is currently playing music (when allowing
+     * music is enabled) are left alone — the foreground exclusion is unconditional, the watchdog
+     * must never kill the app the user is using.
      */
     internal fun enforceAutostart(
         context: Context,
@@ -131,32 +132,27 @@ object AppHelper {
         blocked: Set<String>,
         playingMusicPackage: String?,
     ) {
-        val candidates = getAutostartCandidates(context, blocked, playingMusicPackage)
+        val candidates = getAutostartCandidates(blocked, playingMusicPackage)
         val running = if (candidates.isEmpty()) HashSet() else Root.getRunning(candidates)
         var stopped = 0
         if (running.isNotEmpty() && Root.isAvailable()) {
             Root.shell(running.map { "am force-stop $it" }.toTypedArray())
             stopped = running.size
         }
-        Log.i(Global.LOG_TAG, "autostart enforcement (pass=$reason): stopped=$stopped running=${running.size}")
+        Log.i(
+            Global.LOG_TAG,
+            "autostart enforcement (pass=$reason): candidates=${candidates.size} " +
+                "running=${running.size} stopped=$stopped",
+        )
     }
 
     private fun getAutostartCandidates(
-        context: Context,
         blocked: Set<String>,
         playingMusicPackage: String?,
     ): Set<String> {
-        val focused =
-            if (
-                P.getPreferences(context).getBoolean(
-                    P.IGNORE_FOCUSED_APPS,
-                    P.IGNORE_FOCUSED_APPS_DEFAULT,
-                )
-            ) {
-                Root.getFocusedApps()
-            } else {
-                PseudoHashSet()
-            }
+        // The foreground app is always excluded from enforcement, IGNORE_FOCUSED_APPS only
+        // controls hibernateApps().
+        val focused = Root.getFocusedApps()
         return blocked
             .filter { it != playingMusicPackage && !focused.contains(it) }
             .toSet()
