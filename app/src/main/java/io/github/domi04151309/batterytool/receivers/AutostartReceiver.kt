@@ -5,14 +5,19 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.content.ContextCompat
 import io.github.domi04151309.batterytool.helpers.Global
 import io.github.domi04151309.batterytool.helpers.P
 import io.github.domi04151309.batterytool.helpers.Root
+import io.github.domi04151309.batterytool.services.ForegroundService
 
 /**
  * Enforces autostart blocking: every blacklisted app gets force stopped on boot, after the
  * user unlocks the device and when packages are installed. There is no per app permission,
  * autostart is always blocked for every added app.
+ *
+ * The receiver only does one quick force stop, the repeated passes and the watchdog run in
+ * [ForegroundService] so the receiver stays inside the `goAsync` budget.
  */
 class AutostartReceiver : BroadcastReceiver() {
     override fun onReceive(
@@ -21,41 +26,48 @@ class AutostartReceiver : BroadcastReceiver() {
     ) {
         val action = intent.action ?: return
         if (action !in HANDLED_ACTIONS) return
-        val pendingResult = goAsync()
         val appContext = context.applicationContext
+        startEnforcementService(appContext)
+        val pendingResult = goAsync()
         Thread {
             try {
-                forceStopBlockedApps(appContext)
+                forceStopOnce(appContext)
             } catch (exception: IllegalStateException) {
                 Log.w(Global.LOG_TAG, exception)
-            } catch (exception: InterruptedException) {
-                Log.w(Global.LOG_TAG, exception)
-                Thread.currentThread().interrupt()
             } finally {
                 pendingResult.finish()
             }
         }.start()
     }
 
-    private fun forceStopBlockedApps(context: Context) {
-        // Preferences live in credential encrypted storage: before the first unlock the
-        // list is not available and the next boot or unlock broadcast enforces it again.
-        val blocked = P.getBlacklist(context)
-        if (blocked.isEmpty()) return
-        for (attempt in 1..MAX_ATTEMPTS) {
-            if (Root.isAvailable()) {
-                Root.shell(blocked.map { "am force-stop $it" }.toTypedArray())
+    private fun forceStopOnce(context: Context) {
+        // Preferences live in credential encrypted storage: before the first unlock the list is
+        // not available at all, the service enforces it after the unlock broadcast instead.
+        val blocked =
+            try {
+                P.getBlacklist(context)
+            } catch (ignoredException: IllegalStateException) {
                 return
             }
-            if (attempt < MAX_ATTEMPTS) Thread.sleep(RETRY_DELAY_MILLIS)
+        if (blocked.isEmpty() || !Root.isAvailable()) return
+        Root.shell(blocked.map { "am force-stop $it" }.toTypedArray())
+    }
+
+    private fun startEnforcementService(context: Context) {
+        try {
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, ForegroundService::class.java)
+                    .putExtra(ForegroundService.EXTRA_ENFORCE_AUTOSTART, true),
+            )
+        } catch (exception: IllegalStateException) {
+            // Starting a foreground service from the background is restricted on API 31+, the
+            // passes then run the next time the service is started from the foreground.
+            Log.w(Global.LOG_TAG, exception)
         }
-        Log.w(Global.LOG_TAG, "Root is not available, blocked apps could not be force stopped")
     }
 
     companion object {
-        private const val MAX_ATTEMPTS = 3
-        private const val RETRY_DELAY_MILLIS = 3_000L
-
         // The constants are inlined strings, comparing them is safe on every API level.
         @SuppressLint("InlinedApi")
         private val HANDLED_ACTIONS: Set<String> =
