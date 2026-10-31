@@ -25,6 +25,7 @@ import io.github.domi04151309.batterytool.R
 import io.github.domi04151309.batterytool.adapters.LoadingAdapter
 import io.github.domi04151309.batterytool.adapters.RunningAppsAdapter
 import io.github.domi04151309.batterytool.adapters.SimpleListAdapter
+import io.github.domi04151309.batterytool.data.RunningAppItem
 import io.github.domi04151309.batterytool.data.SimpleListItem
 import io.github.domi04151309.batterytool.helpers.AppHelper
 import io.github.domi04151309.batterytool.helpers.P
@@ -34,6 +35,7 @@ import io.github.domi04151309.batterytool.services.ForegroundService
 
 class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
     private val listItems: MutableList<SimpleListItem> = arrayListOf()
+    private val runningItems: MutableList<RunningAppItem> = arrayListOf()
     private lateinit var recyclerView: RecyclerView
     private lateinit var addButton: FloatingActionButton
     private var mode = MODE_BLOCKED
@@ -160,19 +162,21 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
             val items =
                 runningApps.ifEmpty {
                     listOf(
-                        SimpleListItem(
-                            resources.getString(R.string.running_empty),
-                            resources.getString(R.string.running_empty_summary),
-                            ResourcesCompat.getDrawable(resources, R.drawable.ic_empty, theme),
+                        // No package: the adapter hides the Kill button and lets the summary wrap.
+                        RunningAppItem(
+                            title = resources.getString(R.string.running_empty),
+                            summary = resources.getString(R.string.running_empty_summary),
+                            icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_empty, theme),
+                            packageName = null,
                         ),
                     )
                 }
 
             runOnUiThread {
                 if (mode == requestedMode) {
-                    listItems.clear()
-                    listItems.addAll(items)
-                    recyclerView.adapter = RunningAppsAdapter(listItems, ::onKill)
+                    runningItems.clear()
+                    runningItems.addAll(items)
+                    recyclerView.adapter = RunningAppsAdapter(runningItems, ::onKill)
                 }
             }
         }.start()
@@ -235,7 +239,8 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
         }.start()
 
     private fun onKill(position: Int) {
-        val packageName = listItems.getOrNull(position)?.summary ?: return
+        // The package comes from the item itself; placeholder rows have none and are never killed.
+        val packageName = runningItems.getOrNull(position)?.packageName ?: return
         Thread {
             // Root calls block, so they never run on the UI thread. The list is refreshed with a
             // delay because am force-stop returns before the process is gone.

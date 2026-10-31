@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.util.Log
 import io.github.domi04151309.batterytool.R
+import io.github.domi04151309.batterytool.data.RunningAppItem
 import io.github.domi04151309.batterytool.data.SimpleListItem
 import io.github.domi04151309.batterytool.services.NotificationService
 import java.util.concurrent.CountDownLatch
@@ -20,18 +21,7 @@ object AppHelper {
         packageName: String,
     ): SimpleListItem =
         SimpleListItem(
-            title =
-                context.packageManager.getApplicationLabel(
-                    context.packageManager.getApplicationInfo(
-                        packageName,
-                        PackageManager.GET_META_DATA,
-                    ),
-                ).toString() +
-                    if (P.getForced(context).contains(packageName)) {
-                        " " + context.resources.getString(R.string.main_forced)
-                    } else {
-                        ""
-                    },
+            title = appTitle(context, packageName),
             summary = packageName,
             icon = context.packageManager.getApplicationIcon(packageName),
         )
@@ -51,7 +41,7 @@ object AppHelper {
      * Foreground apps are left out on purpose: they are not "running in the background", and
      * force stopping the app the user is looking at would be surprising.
      */
-    internal fun loadRunningApps(context: Context): List<SimpleListItem> {
+    internal fun loadRunningApps(context: Context): List<RunningAppItem> {
         val candidates =
             context.packageManager
                 .getInstalledApplications(PackageManager.GET_META_DATA)
@@ -84,14 +74,32 @@ object AppHelper {
     private fun runningItem(
         context: Context,
         packageName: String,
-    ): SimpleListItem? =
+    ): RunningAppItem? =
         try {
-            generateListItem(context, packageName)
+            RunningAppItem(
+                title = appTitle(context, packageName),
+                summary = packageName,
+                icon = context.packageManager.getApplicationIcon(packageName),
+                packageName = packageName,
+            )
         } catch (exception: PackageManager.NameNotFoundException) {
             // The app was uninstalled between the query and the lookup.
             Log.w(Global.LOG_TAG, exception)
             null
         }
+
+    private fun appTitle(
+        context: Context,
+        packageName: String,
+    ): String {
+        val info = context.packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+        val label = context.packageManager.getApplicationLabel(info).toString()
+        return if (P.getForced(context).contains(packageName)) {
+            label + " " + context.resources.getString(R.string.main_forced)
+        } else {
+            label
+        }
+    }
 
     private fun hibernateApps(
         context: Context,
