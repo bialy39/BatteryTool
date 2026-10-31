@@ -1,1 +1,9 @@
-1.3.0 (fork): Android 17 / API 37 support, aggressive doze removed, only user apps can be added, autostart is always blocked for every added app.
+1.3.0 (fork): Android 17 / API 37 support.
+
+- New "Running apps" tab: it lists the user apps running in the background and has a Kill
+  button (force-stop) for each of them. The app in the foreground is not shown.
+- Aggressive doze removed: the fork no longer touches the device-idle controller.
+- Only user apps can be added: system apps and Battery Tool itself are filtered out of the
+  picker.
+- Autostart is always blocked for every added app, with no per-app toggle. It is re-applied
+  after boot, unlock and app install/update, and a watchdog repeats it every 60 seconds.

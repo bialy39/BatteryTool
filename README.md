@@ -25,6 +25,9 @@ I am not responsible for any damage to your device!
   `PACKAGE_ADDED` / `PACKAGE_REPLACED`, autostart of every added app is blocked again.
   A watchdog re-applies the restriction every 60 seconds. An app that is currently in the
   foreground is left alone.
+- **New "Running apps" tab** — shows the user apps that are currently running in the
+  background, each with a **Kill** button that force-stops it. The app in the foreground
+  is never listed, so you cannot kill what you are looking at.
 - **New application id** `dev.bialy39.batterytool`, so this fork installs alongside the
   official Battery Tool instead of replacing it.
 
