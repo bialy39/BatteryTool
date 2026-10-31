@@ -53,7 +53,7 @@ class AutostartReceiver : BroadcastReceiver() {
 
     companion object {
         private const val MAX_ATTEMPTS = 3
-        private const val RETRY_DELAY_MILLIS = 5_000L
+        private const val RETRY_DELAY_MILLIS = 3_000L
 
         // The constants are inlined strings, comparing them is safe on every API level.
         @SuppressLint("InlinedApi")
