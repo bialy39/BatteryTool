@@ -18,7 +18,6 @@
     <string name="str_security">Bezpieczeństwo</string>
 
     <string name="main_stopped_soon">Wkrótce zostaną zatrzymane</string>
-    <string name="main_stopped_unnecessary">Nie trzeba zatrzymywać</string>
     <string name="main_stopped">Zatrzymane</string>
     <string name="main_empty">Nic tu nie ma</string>
     <string name="main_empty_summary">Wygląda na to, że żadna aplikacja nie należy do tej kategorii</string>

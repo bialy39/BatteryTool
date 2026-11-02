@@ -203,7 +203,6 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
             val requestedMode = mode
             val blacklist = P.getBlacklist(this)
             val soonApps: MutableList<SimpleListItem> = ArrayList(blacklist.size / 2)
-            val unnecessaryApps: MutableList<SimpleListItem> = ArrayList(blacklist.size / 2)
             val stoppedApps: MutableList<SimpleListItem> = ArrayList(blacklist.size / 2)
             val services = Root.getServices()
 
@@ -225,7 +224,6 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
                     soonApps.add(listItem)
                     continue
                 }
-                unnecessaryApps.add(listItem)
             }
 
             val emptyList =
@@ -240,8 +238,6 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
             val items: MutableList<SimpleListItem> = arrayListOf()
             items.add(SimpleListItem(summary = resources.getString(R.string.main_stopped_soon)))
             items.addAll(soonApps.ifEmpty { emptyList })
-            items.add(SimpleListItem(summary = resources.getString(R.string.main_stopped_unnecessary)))
-            items.addAll(unnecessaryApps.ifEmpty { emptyList })
             items.add(SimpleListItem(summary = resources.getString(R.string.main_stopped)))
             items.addAll(stoppedApps.ifEmpty { emptyList })
 

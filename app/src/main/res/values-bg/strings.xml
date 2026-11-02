@@ -18,7 +18,6 @@
     <string name="str_security">Сигурност</string>
 
     <string name="main_stopped_soon">Скоро ще бъдат спрени</string>
-    <string name="main_stopped_unnecessary">Няма нужда да бъдат спирани</string>
     <string name="main_stopped">Спряни</string>
     <string name="main_empty">Тук няма нищо</string>
     <string name="main_empty_summary">Изглежда, че в тази категория няма приложения</string>
