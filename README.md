@@ -65,6 +65,13 @@ variables — `KEYSTORE_FILE`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
   Android, Google Play and the Google Play logo are trademarks of Google LLC.
 </i>
 
+## Credits
+
+Original app by [Domi04151309](https://github.com/Domi04151309) (GPL-3.0). Parts of this
+fork were written with an AI assistant; those commits carry a
+`Co-authored-by: DeepSeek <noreply@deepseek.com>` trailer. The full attribution policy
+lives in **[CONTRIBUTORS.md](CONTRIBUTORS.md)**.
+
 ## License
 
 Copyright (C) 2020 Domi04151309
