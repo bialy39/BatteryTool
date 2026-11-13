@@ -20,15 +20,13 @@ I am not responsible for any damage to your device!
 - **Aggressive doze removed** — the fork no longer touches the device-idle controller.
 - **Only user apps can be added** — system apps and the app itself are filtered out of the
   picker, so you cannot accidentally hibernate something the system depends on.
-- **Autostart is always blocked for every added app** — there is no per-app toggle
-  anymore. Added apps are force-stopped **once** after `BOOT_COMPLETED`,
-  `LOCKED_BOOT_COMPLETED` and `USER_UNLOCKED`; `PACKAGE_ADDED` / `PACKAGE_REPLACED` no
-  longer stop anything, they are picked up at the next screen off. Background enforcement
-  never touches an app while the screen is on: apps are stopped only after the display has
-  been off for `auto_stop_delay` seconds, and a watchdog repeats the attempt every 60
-  seconds for as long as the screen stays off. Only **Stop now**, the quick tile and the
-  app's own screens stop apps right away. An app that is currently in the foreground is
-  always left alone.
+- **Apps are stopped only after the screen goes off** — the list is exactly the set of apps
+  that have to stop in the background, nothing else uses it. Added apps are force-stopped
+  once the display has been off for `auto_stop_delay` seconds; if the screen comes back on
+  before the delay ran out, nothing is stopped. Nothing is stopped at boot, after an install
+  or an update, or at any other time while the screen is on. Only **Stop now**, the quick
+  tile and the **Kill** button in the Running apps tab stop apps immediately. An app that is
+  currently in the foreground is always left alone.
 - **New "Running apps" tab** — shows the user apps that are currently running in the
   background, each with a **Kill** button that force-stops it. The app in the foreground
   is never listed, so you cannot kill what you are looking at.

@@ -6,40 +6,22 @@ import android.app.Service
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import io.github.domi04151309.batterytool.R
-import io.github.domi04151309.batterytool.helpers.AppHelper
-import io.github.domi04151309.batterytool.helpers.Global
 import io.github.domi04151309.batterytool.receivers.ScreenStateReceiver
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 /**
- * Keeps running in the foreground and enforces autostart blocking. The watchdog repeats a pass
- * every 60 s for as long as the service lives and catches apps that come up from their own boot
- * receivers later on.
+ * Hosts [ScreenStateReceiver] and the ongoing foreground notification.
  *
- * A pass does nothing while the screen is on, so there is no series of passes right after boot
- * anymore: the app that starts right after the unlock is left alone, and the watchdog picks the
- * list up once the screen goes off. The single force stop after a boot or unlock broadcast is
- * done by [io.github.domi04151309.batterytool.receivers.AutostartReceiver], not by this service.
+ * The screen-off receiver is registered at runtime on purpose: the stop that happens
+ * `auto_stop_delay` seconds after the display went dark needs a live process, and a manifest
+ * receiver would be gone by then. The notification is what keeps that process alive. Starting the
+ * service therefore starts the stop timer, nothing more — no app is stopped from here, neither on
+ * start nor on a repeated `onStartCommand`.
  */
 class ForegroundService : Service() {
     private val screenStateReceiver = ScreenStateReceiver()
-    private val handler = Handler(Looper.getMainLooper())
-    private val executor: ExecutorService = Executors.newSingleThreadExecutor()
-    private val watchdog =
-        object : Runnable {
-            override fun run() {
-                runEnforcementPass(WATCHDOG_REASON)
-                handler.postDelayed(this, WATCHDOG_INTERVAL_MILLIS)
-            }
-        }
-    private var isWatchdogRunning = false
 
     override fun onCreate() {
         super.onCreate()
@@ -48,9 +30,6 @@ class ForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacksAndMessages(null)
-        executor.shutdownNow()
-        isWatchdogRunning = false
         unregisterReceiver(screenStateReceiver)
     }
 
@@ -70,26 +49,7 @@ class ForegroundService : Service() {
                 .setShowWhen(false)
                 .build(),
         )
-        scheduleWatchdog()
         return START_STICKY
-    }
-
-    private fun scheduleWatchdog() {
-        // onStartCommand runs on every restart, including the one after START_STICKY, so the flag
-        // has to keep a single watchdog in the queue.
-        if (isWatchdogRunning) return
-        isWatchdogRunning = true
-        handler.post(watchdog)
-    }
-
-    private fun runEnforcementPass(reason: String) {
-        executor.execute {
-            try {
-                AppHelper.enforceAutostart(this, reason)
-            } catch (exception: IllegalStateException) {
-                Log.w(Global.LOG_TAG, exception)
-            }
-        }
     }
 
     private fun createNotificationChannel() {
@@ -107,7 +67,5 @@ class ForegroundService : Service() {
 
     companion object {
         private const val CHANNEL_ID: String = "service_channel"
-        private const val WATCHDOG_REASON: String = "watchdog"
-        private const val WATCHDOG_INTERVAL_MILLIS: Long = 60_000L
     }
 }
