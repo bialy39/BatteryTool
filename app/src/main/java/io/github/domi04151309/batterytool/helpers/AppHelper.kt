@@ -155,18 +155,18 @@ object AppHelper {
         }
     }
 
-    internal fun isInteractive(context: Context): Boolean =
-        (context.getSystemService(Context.POWER_SERVICE) as PowerManager).isInteractive
+    internal fun isInteractive(context: Context): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return powerManager.isInteractive
+    }
 
-    /**
-     * The blacklist, or null while the storage is still locked. Preferences live in credential
-     * encrypted storage, the pass after USER_UNLOCKED runs first.
-     */
     private fun blacklistOrNull(
         context: Context,
         reason: String,
     ): Set<String>? =
         try {
+            // Preferences live in credential encrypted storage: before the first unlock the list is
+            // not available at all, the pass after USER_UNLOCKED runs instead.
             P.getBlacklist(context)
         } catch (ignoredException: IllegalStateException) {
             Log.i(Global.LOG_TAG, "autostart enforcement (pass=$reason): storage locked")
