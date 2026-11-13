@@ -9,6 +9,7 @@ import kotlin.collections.HashSet
 import kotlin.text.StringBuilder
 
 internal object Root {
+    private const val AVAILABILITY_TIMEOUT_MILLIS: Long = 3_000L
     private const val AVAILABILITY_POLL_MILLIS: Long = 100L
 
     // No root call may block a receiver or the service forever: root prompts that are never
@@ -36,6 +37,9 @@ internal object Root {
             process = Runtime.getRuntime().exec(arrayOf("su", "-c", command))
             if (!awaitProcess(process, SHELL_TIMEOUT_SECONDS * MILLIS_PER_SECOND)) {
                 Log.w(this::class.simpleName, "Root command timed out")
+            } else {
+                val exitCode = process.exitValue()
+                if (exitCode != 0) Log.w(this::class.simpleName, "Root shell exited with code $exitCode")
             }
         } catch (exception: IOException) {
             Log.w(this::class.simpleName, exception)
@@ -45,6 +49,33 @@ internal object Root {
         } finally {
             process?.destroy()
         }
+    }
+
+    fun isAvailable(): Boolean {
+        var process: Process? = null
+        var exitCode = -1
+        try {
+            process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
+            var waited = 0L
+            // A denied `su` exits immediately with a non-zero code, so the loop has to end on any
+            // exit value: polling only while the process is alive keeps the budget at three seconds.
+            while (exitCode == -1 && waited < AVAILABILITY_TIMEOUT_MILLIS) {
+                try {
+                    exitCode = process.exitValue()
+                } catch (ignoredException: IllegalThreadStateException) {
+                    Thread.sleep(AVAILABILITY_POLL_MILLIS)
+                    waited += AVAILABILITY_POLL_MILLIS
+                }
+            }
+        } catch (exception: IOException) {
+            Log.w(this::class.simpleName, exception)
+        } catch (exception: InterruptedException) {
+            Log.w(this::class.simpleName, exception)
+            Thread.currentThread().interrupt()
+        } finally {
+            process?.destroy()
+        }
+        return exitCode == 0
     }
 
     fun shell(commands: Array<String>) {
@@ -57,6 +88,9 @@ internal object Root {
             output.flush()
             if (!awaitProcess(process, shellTimeoutSeconds(commands.size) * MILLIS_PER_SECOND)) {
                 Log.w(this::class.simpleName, "Root shell timed out")
+            } else {
+                val exitCode = process.exitValue()
+                if (exitCode != 0) Log.w(this::class.simpleName, "Root shell exited with code $exitCode")
             }
         } catch (exception: IOException) {
             Log.e(this::class.simpleName, exception.toString())
