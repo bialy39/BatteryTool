@@ -12,12 +12,18 @@ import io.github.domi04151309.batterytool.helpers.Root
 import io.github.domi04151309.batterytool.services.ForegroundService
 
 /**
- * Enforces autostart blocking: every blacklisted app gets force stopped on boot, after the
- * user unlocks the device and when packages are installed. There is no per app permission,
- * autostart is always blocked for every added app.
+ * Enforces autostart blocking right after the device became usable: every blacklisted app gets
+ * force stopped once on boot and once after the user unlocks the device. There is no per app
+ * permission, autostart is always blocked for every added app.
  *
- * The receiver only does one quick force stop, the repeated passes and the watchdog run in
- * [ForegroundService] so the receiver stays inside the `goAsync` budget.
+ * Package events do not force stop anything anymore — updating an app in the background used to
+ * kill the app the user was about to use. They only start the service, so the next screen off
+ * picks the new app up.
+ *
+ * Repeated passes never run here: the receiver starts [ForegroundService], whose watchdog only
+ * acts while the screen is off, and does one quick force stop itself so the receiver stays inside
+ * the `goAsync` budget. That one pass is the only place besides the user triggered actions where
+ * an app is stopped while the device is interactive.
  */
 class AutostartReceiver : BroadcastReceiver() {
     override fun onReceive(
@@ -31,7 +37,7 @@ class AutostartReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         Thread {
             try {
-                forceStopOnce(appContext)
+                forceStopOnce(appContext, action)
             } catch (exception: IllegalStateException) {
                 Log.w(Global.LOG_TAG, exception)
             } finally {
@@ -40,7 +46,14 @@ class AutostartReceiver : BroadcastReceiver() {
         }.start()
     }
 
-    private fun forceStopOnce(context: Context) {
+    private fun forceStopOnce(
+        context: Context,
+        action: String,
+    ) {
+        if (action !in FORCE_STOP_ACTIONS) {
+            Log.i(Global.LOG_TAG, "package event, force stop deferred to screen off")
+            return
+        }
         // Preferences live in credential encrypted storage: before the first unlock the list is
         // not available at all, the service enforces it after the unlock broadcast instead.
         val blocked =
@@ -49,20 +62,17 @@ class AutostartReceiver : BroadcastReceiver() {
             } catch (ignoredException: IllegalStateException) {
                 return
             }
-        if (blocked.isEmpty() || !Root.isAvailable()) return
-        Root.shell(blocked.map { "am force-stop $it" }.toTypedArray())
+        if (blocked.isNotEmpty() && Root.isAvailable()) {
+            Root.shell(blocked.map { "am force-stop $it" }.toTypedArray())
+        }
     }
 
     private fun startEnforcementService(context: Context) {
         try {
-            ContextCompat.startForegroundService(
-                context,
-                Intent(context, ForegroundService::class.java)
-                    .putExtra(ForegroundService.EXTRA_ENFORCE_AUTOSTART, true),
-            )
+            ContextCompat.startForegroundService(context, Intent(context, ForegroundService::class.java))
         } catch (exception: IllegalStateException) {
             // Starting a foreground service from the background is restricted on API 31+, the
-            // passes then run the next time the service is started from the foreground.
+            // watchdog then runs the next time the service is started from the foreground.
             Log.w(Global.LOG_TAG, exception)
         }
     }
@@ -70,13 +80,19 @@ class AutostartReceiver : BroadcastReceiver() {
     companion object {
         // The constants are inlined strings, comparing them is safe on every API level.
         @SuppressLint("InlinedApi")
-        private val HANDLED_ACTIONS: Set<String> =
+        private val FORCE_STOP_ACTIONS: Set<String> =
             setOf(
                 Intent.ACTION_BOOT_COMPLETED,
                 Intent.ACTION_LOCKED_BOOT_COMPLETED,
                 Intent.ACTION_USER_UNLOCKED,
-                Intent.ACTION_PACKAGE_ADDED,
-                Intent.ACTION_PACKAGE_REPLACED,
             )
+
+        @SuppressLint("InlinedApi")
+        private val HANDLED_ACTIONS: Set<String> =
+            FORCE_STOP_ACTIONS +
+                setOf(
+                    Intent.ACTION_PACKAGE_ADDED,
+                    Intent.ACTION_PACKAGE_REPLACED,
+                )
     }
 }

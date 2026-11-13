@@ -19,10 +19,14 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 /**
- * Keeps running in the foreground and enforces autostart blocking. On request it schedules one
- * pass right away, then 20 s, 60 s and 150 s later and afterwards every 60 s for as long as the
- * service lives. The first passes catch apps that start immediately at boot, the later passes
- * and the watchdog catch apps that come up from their own boot receivers after our force stop.
+ * Keeps running in the foreground and enforces autostart blocking. The watchdog repeats a pass
+ * every 60 s for as long as the service lives and catches apps that come up from their own boot
+ * receivers later on.
+ *
+ * A pass does nothing while the screen is on, so there is no series of passes right after boot
+ * anymore: the app that starts right after the unlock is left alone, and the watchdog picks the
+ * list up once the screen goes off. The single force stop after a boot or unlock broadcast is
+ * done by [io.github.domi04151309.batterytool.receivers.AutostartReceiver], not by this service.
  */
 class ForegroundService : Service() {
     private val screenStateReceiver = ScreenStateReceiver()
@@ -39,12 +43,7 @@ class ForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        registerReceiver(
-            screenStateReceiver,
-            IntentFilter(Intent.ACTION_SCREEN_ON).apply {
-                addAction(Intent.ACTION_SCREEN_OFF)
-            },
-        )
+        registerReceiver(screenStateReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
     }
 
     override fun onDestroy() {
@@ -71,21 +70,16 @@ class ForegroundService : Service() {
                 .setShowWhen(false)
                 .build(),
         )
-        if (intent?.getBooleanExtra(EXTRA_ENFORCE_AUTOSTART, false) == true) scheduleBootPasses()
-        return START_REDELIVER_INTENT
+        scheduleWatchdog()
+        return START_STICKY
     }
 
-    private fun scheduleBootPasses() {
-        // Every boot, unlock or package broadcast gets a fresh series of passes: a pass that ran
-        // before the first unlock could not read the blacklist, this one can.
-        for (delayMillis in ENFORCEMENT_DELAYS_MILLIS) {
-            val reason = "boot+" + delayMillis / MILLIS_PER_SECOND + "s"
-            handler.postDelayed({ runEnforcementPass(reason) }, delayMillis)
-        }
-        if (!isWatchdogRunning) {
-            isWatchdogRunning = true
-            handler.postDelayed(watchdog, WATCHDOG_INTERVAL_MILLIS)
-        }
+    private fun scheduleWatchdog() {
+        // onStartCommand runs on every restart, including the one after START_STICKY, so the flag
+        // has to keep a single watchdog in the queue.
+        if (isWatchdogRunning) return
+        isWatchdogRunning = true
+        handler.post(watchdog)
     }
 
     private fun runEnforcementPass(reason: String) {
@@ -112,12 +106,8 @@ class ForegroundService : Service() {
     }
 
     companion object {
-        const val EXTRA_ENFORCE_AUTOSTART: String = "enforce_autostart"
         private const val CHANNEL_ID: String = "service_channel"
-        private const val MILLIS_PER_SECOND: Long = 1_000L
         private const val WATCHDOG_REASON: String = "watchdog"
         private const val WATCHDOG_INTERVAL_MILLIS: Long = 60_000L
-        private val ENFORCEMENT_DELAYS_MILLIS: List<Long> =
-            listOf(0L, 20_000L, 60_000L, 150_000L)
     }
 }
