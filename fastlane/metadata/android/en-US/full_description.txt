@@ -2,7 +2,8 @@ Battery Tool (fork) helps you save battery by stopping apps that are running in 
 You can select which apps to stop but keep in mind that you should not stop alarm clock apps or messaging apps unless you do not rely on them.
 Only user apps can be added; system apps and Battery Tool itself are not offered.
 
-This fork targets Android 17 (API 37). Only user apps can be added and autostart is always blocked for every added app.
+This fork targets Android 17 (API 37). Only user apps can be added, and added apps are stopped
+once the screen has been off for the configured delay.
 
 This app requires root access!
 I am not responsible for any damage to your device!
@@ -11,7 +12,7 @@ I am not responsible for any damage to your device!
 - Force stop apps automatically
 - Quick tile
 - Shortcut
-- Autostart blocked for every added app
+- Stop after the screen turns off
 
 <font color="#2467d6"><b>Related Links</b></font>
 Source code (fork): <a href="https://github.com/bialy39/BatteryTool">https://github.com/bialy39/BatteryTool</a>
