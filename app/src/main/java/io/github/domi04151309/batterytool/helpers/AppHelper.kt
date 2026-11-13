@@ -3,6 +3,7 @@ package io.github.domi04151309.batterytool.helpers
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import android.os.PowerManager
 import android.util.Log
 import io.github.domi04151309.batterytool.R
 import io.github.domi04151309.batterytool.data.RunningAppItem
@@ -154,24 +155,49 @@ object AppHelper {
         }
     }
 
+    internal fun isInteractive(context: Context): Boolean {
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        return powerManager.isInteractive
+    }
+
+    private fun blacklistOrNull(
+        context: Context,
+        reason: String,
+    ): Set<String>? =
+        try {
+            // Preferences live in credential encrypted storage: before the first unlock the list is
+            // not available at all, the pass after USER_UNLOCKED runs instead.
+            P.getBlacklist(context)
+        } catch (ignoredException: IllegalStateException) {
+            Log.i(Global.LOG_TAG, "autostart enforcement (pass=$reason): storage locked")
+            null
+        }
+
     /**
      * One enforcement pass: force stops every app of the blacklist that is running right now.
      * Apps that are in the foreground and the app that is currently playing music (when allowing
      * music is enabled) are left alone — the foreground exclusion is unconditional, the watchdog
      * must never kill the app the user is using.
+     *
+     * A pass never touches anything while the device is interactive: force stopping an app the
+     * user can switch back to at any moment is not what background enforcement is for, and it used
+     * to kill apps right after the user left them. Both conditions are read here, right before the
+     * force stop, so neither a stale receiver state nor an outdated setting can leak into the
+     * decision.
      */
     internal fun enforceAutostart(
         context: Context,
         reason: String = DEFAULT_PASS_REASON,
     ) {
-        val blocked =
-            try {
-                P.getBlacklist(context)
-            } catch (ignoredException: IllegalStateException) {
-                // Storage is locked until the first unlock, the pass after USER_UNLOCKED runs.
-                Log.i(Global.LOG_TAG, "autostart enforcement (pass=$reason): storage locked")
-                return
-            }
+        val blocked = blacklistOrNull(context, reason) ?: return
+        if (!P.getPreferences(context).getBoolean(P.AUTO_STOP, P.AUTO_STOP_DEFAULT)) {
+            Log.i(Global.LOG_TAG, "autostart enforcement (pass=$reason): auto stop disabled")
+            return
+        }
+        if (isInteractive(context)) {
+            Log.i(Global.LOG_TAG, "autostart enforcement (pass=$reason): device interactive, skipping force stop")
+            return
+        }
         val playingMusicPackage =
             if (P.getPreferences(context).getBoolean(P.ALLOW_MUSIC, P.ALLOW_MUSIC_DEFAULT)) {
                 getPlayingPackage()

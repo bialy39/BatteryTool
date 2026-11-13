@@ -8,33 +8,29 @@ import android.os.Looper
 import io.github.domi04151309.batterytool.helpers.AppHelper
 import io.github.domi04151309.batterytool.helpers.P
 
+/**
+ * Hibernates the blacklist once the screen has been off for the configured delay.
+ *
+ * The receiver keeps no screen state of its own: it is created in the service and a restored
+ * process would start with a guess. The state is read from the power manager when the delayed
+ * runnable fires instead, so a screen that came back on cancels the pass implicitly.
+ */
 class ScreenStateReceiver : BroadcastReceiver() {
-    private var isScreenOn = true
-
     private fun onScreenOff(context: Context) {
-        isScreenOn = false
         if (P.getPreferences(context).getBoolean(P.AUTO_STOP, P.AUTO_STOP_DEFAULT)) {
             Handler(Looper.getMainLooper()).postDelayed(
-                { if (!isScreenOn) AppHelper.hibernate(context) },
+                { if (!AppHelper.isInteractive(context)) AppHelper.hibernate(context) },
                 P.getPreferences(context).getInt(P.AUTO_STOP_DELAY, P.AUTO_STOP_DELAY_DEFAULT)
                     .toLong() * SECONDS_TO_MILLIS,
             )
         }
     }
 
-    private fun onScreenOn() {
-        isScreenOn = true
-    }
-
     override fun onReceive(
         context: Context,
         intent: Intent,
     ) {
-        if (intent.action == Intent.ACTION_SCREEN_OFF) {
-            onScreenOff(context)
-        } else if (intent.action == Intent.ACTION_SCREEN_ON) {
-            onScreenOn()
-        }
+        if (intent.action == Intent.ACTION_SCREEN_OFF) onScreenOff(context)
     }
 
     companion object {
