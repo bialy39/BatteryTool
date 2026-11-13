@@ -100,6 +100,10 @@ object AppHelper {
         context: Context,
         playingMusicPackage: String?,
     ) {
+        if (!Root.isAvailable()) {
+            Log.w(Global.LOG_TAG, "hibernate: root is not available, nothing was stopped")
+            return
+        }
         val apps = P.getBlacklist(context)
         val services = Root.getServices()
         val commands: ArrayList<String> = ArrayList(apps.size / 2)
