@@ -59,6 +59,12 @@ Release builds are signed only when the keystore is handed in through environmen
 variables — `KEYSTORE_FILE`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Without them
 `assembleRelease` produces an unsigned APK. No keystore is committed to this repository.
 
+To get a signed test APK for a phone without tagging anything, run the "Test build"
+workflow from the Actions tab (manual `workflow_dispatch` trigger, one build per run). It
+performs the same signed `assembleRelease` and uploads the APK plus its `.sha256` as a
+build artifact named `batterytool-test-<commit sha>`, kept for 14 days — nothing is
+published as a release. It needs the same keystore secrets as the release workflow.
+
 ## Previews
 
 <img src="https://raw.githubusercontent.com/bialy39/BatteryTool/main/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" width="18%" /><img src="https://raw.githubusercontent.com/bialy39/BatteryTool/main/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" width="18%" /><img src="https://raw.githubusercontent.com/bialy39/BatteryTool/main/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" width="18%" />
