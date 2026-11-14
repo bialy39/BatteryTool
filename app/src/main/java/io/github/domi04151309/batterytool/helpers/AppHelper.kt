@@ -62,7 +62,8 @@ object AppHelper {
      * Packages of [blacklist] that have a process right now and would therefore be stopped once
      * the screen has been off long enough. The "Will get stopped soon" section and
      * hibernateApps() both use it, so the list the user sees is exactly the set that gets
-     * force-stopped.
+     * force-stopped. The focused app (IGNORE_FOCUSED_APPS), the playing music package
+     * (ALLOW_MUSIC) and apps that were already stopped stay out of the result.
      *
      * Detection is process based on purpose: `dumpsys activity services` only knows about
      * services, so an app that keeps a cached process without a service never showed up there.
@@ -92,9 +93,6 @@ object AppHelper {
             applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0 &&
             applicationInfo.flags and ApplicationInfo.FLAG_INSTALLED != 0
 
-    /**
-     * The app the user is looking at, or an empty set when [P.IGNORE_FOCUSED_APPS] is off.
-     */
     private fun focusedApps(context: Context): Set<String> =
         if (
             P.getPreferences(context).getBoolean(
@@ -107,10 +105,6 @@ object AppHelper {
             PseudoHashSet()
         }
 
-    /**
-     * An app that was force-stopped carries [ApplicationInfo.FLAG_STOPPED] until the user opens
-     * it again; an app that is gone has nothing left to stop either.
-     */
     private fun isStopped(
         context: Context,
         packageName: String,
@@ -121,6 +115,7 @@ object AppHelper {
                 PackageManager.GET_META_DATA,
             ).flags and ApplicationInfo.FLAG_STOPPED != 0
         } catch (exception: PackageManager.NameNotFoundException) {
+            // Stopped until the app is opened again, and a missing app has nothing to stop.
             Log.w(Global.LOG_TAG, exception)
             true
         }
