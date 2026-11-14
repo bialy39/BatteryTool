@@ -204,7 +204,9 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
             val blacklist = P.getBlacklist(this)
             val soonApps: MutableList<SimpleListItem> = ArrayList(blacklist.size / 2)
             val stoppedApps: MutableList<SimpleListItem> = ArrayList(blacklist.size / 2)
-            val services = Root.getServices()
+            // Same computation as the one hibernateApps() stops with, so this section is the
+            // exact set of apps that disappear once the screen goes off.
+            val soon = AppHelper.pendingStopApps(this, blacklist)
 
             @Suppress("LoopWithTooManyJumpStatements")
             for (app in blacklist) {
@@ -218,9 +220,7 @@ class MainActivity : BaseActivity(), RecyclerViewHelperInterface {
                     stoppedApps.add(listItem)
                     continue
                 }
-                if (
-                    services.contains(listItem.summary) || P.getForced(this).contains(listItem.summary)
-                ) {
+                if (soon.contains(listItem.summary)) {
                     soonApps.add(listItem)
                     continue
                 }

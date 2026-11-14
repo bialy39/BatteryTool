@@ -144,26 +144,6 @@ internal object Root {
         return HashSet(services.lines())
     }
 
-    fun getServices(): HashSet<String> {
-        val services = StringBuilder()
-        try {
-            val inputStream =
-                Runtime.getRuntime().exec(
-                    arrayOf(
-                        "su",
-                        "-c",
-                        "dumpsys activity services",
-                    ),
-                ).inputStream
-            Scanner(inputStream).useDelimiter("\\A").use { scanner ->
-                services.append(if (scanner.hasNext()) scanner.next() else "")
-            }
-        } catch (exception: IOException) {
-            Log.e(this::class.simpleName, exception.toString())
-        }
-        return parseServices(services.toString())
-    }
-
     private fun awaitProcess(
         process: Process,
         timeoutMillis: Long,
@@ -215,22 +195,5 @@ internal object Root {
             output.append(if (scanner.hasNext()) scanner.next() else "")
         }
         return output.toString()
-    }
-
-    private fun parseServices(services: String): HashSet<String> {
-        val set = HashSet<String>()
-        var temp: String
-        for (line in services.lines()) {
-            if (line.contains("* ServiceRecord")) {
-                temp = line.substring(line.indexOf('{') + 1, line.indexOf('/'))
-                repeat(2) {
-                    temp = temp.substring(temp.indexOf(' ') + 1)
-                }
-                set.add(temp)
-            } else if (line.contains('#') && line.contains(':')) {
-                set.add(line.substring(line.indexOf(": ") + 2))
-            }
-        }
-        return set
     }
 }

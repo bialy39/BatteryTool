@@ -58,6 +58,33 @@ object AppHelper {
             .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
     }
 
+    /**
+     * Packages of [blacklist] that have a process right now and would therefore be stopped once
+     * the screen has been off long enough. The "Will get stopped soon" section and
+     * hibernateApps() both use it, so the list the user sees is exactly the set that gets
+     * force-stopped. The focused app (IGNORE_FOCUSED_APPS), the playing music package
+     * (ALLOW_MUSIC) and apps that were already stopped stay out of the result.
+     *
+     * Detection is process based on purpose: `dumpsys activity services` only knows about
+     * services, so an app that keeps a cached process without a service never showed up there.
+     * The whole list is checked with a single root shell.
+     */
+    internal fun pendingStopApps(
+        context: Context,
+        blacklist: Set<String>,
+        playingMusicPackage: String? = null,
+    ): HashSet<String> {
+        if (blacklist.isEmpty()) return HashSet()
+        val running = Root.getRunning(blacklist)
+        if (running.isEmpty()) return running
+        val focused = focusedApps(context)
+        return running.filterTo(HashSet()) { packageName ->
+            packageName != playingMusicPackage &&
+                !focused.contains(packageName) &&
+                !isStopped(context, packageName)
+        }
+    }
+
     private fun isUserApp(
         context: Context,
         applicationInfo: ApplicationInfo,
@@ -65,6 +92,33 @@ object AppHelper {
         applicationInfo.packageName != context.packageName &&
             applicationInfo.flags and ApplicationInfo.FLAG_SYSTEM == 0 &&
             applicationInfo.flags and ApplicationInfo.FLAG_INSTALLED != 0
+
+    private fun focusedApps(context: Context): Set<String> =
+        if (
+            P.getPreferences(context).getBoolean(
+                P.IGNORE_FOCUSED_APPS,
+                P.IGNORE_FOCUSED_APPS_DEFAULT,
+            )
+        ) {
+            Root.getFocusedApps()
+        } else {
+            PseudoHashSet()
+        }
+
+    private fun isStopped(
+        context: Context,
+        packageName: String,
+    ): Boolean =
+        try {
+            context.packageManager.getApplicationInfo(
+                packageName,
+                PackageManager.GET_META_DATA,
+            ).flags and ApplicationInfo.FLAG_STOPPED != 0
+        } catch (exception: PackageManager.NameNotFoundException) {
+            // Stopped until the app is opened again, and a missing app has nothing to stop.
+            Log.w(Global.LOG_TAG, exception)
+            true
+        }
 
     private fun runningItem(
         context: Context,
@@ -104,39 +158,10 @@ object AppHelper {
             Log.w(Global.LOG_TAG, "hibernate: root is not available, nothing was stopped")
             return
         }
-        val apps = P.getBlacklist(context)
-        val services = Root.getServices()
-        val commands: ArrayList<String> = ArrayList(apps.size / 2)
-        val focused =
-            if (
-                P.getPreferences(context).getBoolean(
-                    P.IGNORE_FOCUSED_APPS,
-                    P.IGNORE_FOCUSED_APPS_DEFAULT,
-                )
-            ) {
-                Root.getFocusedApps()
-            } else {
-                PseudoHashSet()
-            }
-        for (packageName in apps) {
-            try {
-                @Suppress("ComplexCondition")
-                if (
-                    packageName != playingMusicPackage &&
-                    !focused.contains(packageName) &&
-                    context.packageManager.getApplicationInfo(
-                        packageName,
-                        PackageManager.GET_META_DATA,
-                    ).flags and ApplicationInfo.FLAG_STOPPED == 0 &&
-                    (services.contains(packageName) || P.getForced(context).contains(packageName))
-                ) {
-                    commands.add("am force-stop $packageName")
-                }
-            } catch (exception: PackageManager.NameNotFoundException) {
-                Log.w(Global.LOG_TAG, exception)
-                continue
-            }
-        }
+        // The same call that fills the "Will get stopped soon" section, so what the user was
+        // shown is what gets stopped here.
+        val apps = pendingStopApps(context, P.getBlacklist(context), playingMusicPackage)
+        val commands = apps.map { packageName -> "am force-stop $packageName" }
         if (commands.isNotEmpty()) Root.shell(commands.toTypedArray())
     }
 
